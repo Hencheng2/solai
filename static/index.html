@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolAI - Personal Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --dark-bg: #0a1929;
+            --darker-bg: #07121d;
+            --card-bg: #112233;
+            --accent-green: #2a9d8f;
+            --accent-orange: #e76f51;
+            --text-primary: #e0e1dd;
+            --text-secondary: #a8dadc;
+            --border-color: #1e3a5f;
+            --success-color: #2a9d8f;
+            --error-color: #e63946;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(42, 157, 143, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(231, 111, 81, 0.1) 0%, transparent 20%);
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .secret-s {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--accent-green);
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        
+        .secret-s:hover {
+            transform: scale(1.1);
+        }
+        
+        .secret-s::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--accent-orange);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .secret-s:hover::after {
+            transform: scaleX(1);
+        }
+        
+        .title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--accent-green), var(--accent-orange));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
+        }
+        
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background: var(--accent-orange);
+            border-bottom-right-radius: 5px;
+        }
+        
+        .bot-message {
+            align-self: flex-start;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 5px;
+        }
+        
+        .input-area {
+            display: flex;
+            padding: 20px;
+            background: var(--darker-bg);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 30px;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            outline: none;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.3s;
+        }
+        
+        .message-input:focus {
+            border-color: var(--accent-green);
+        }
+        
+        .send-button {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-left: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .send-button:hover {
+            background: var(--accent-orange);
+            transform: rotate(90deg);
+        }
+        
+        /* Admin Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 18, 29, 0.9);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            animation: modalFadeIn 0.4s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            width: 90%;
+            max-width: 800px;
+            margin: 5% auto;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            background: var(--darker-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-title {
+            font-size: 1.8rem;
+            color: var(--accent-green);
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: var(--accent-orange);
+        }
+        
+        .modal-body {
+            padding: 25px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .password-form, .knowledge-form {
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-green);
+        }
+        
+        .submit-btn {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background: var(--accent-orange);
+            transform: translateY(-2px);
+        }
+        
+        .knowledge-list, .suggestions-list {
+            margin-top: 25px;
+        }
+        
+        .list-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .knowledge-item, .suggestion-item {
+            background: var(--dark-bg);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--accent-green);
+        }
+        
+        .suggestion-item {
+            border-left-color: var(--accent-orange);
+        }
+        
+        .item-text {
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+        
+        .item-response {
+            color: var(--text-secondary);
+        }
+        
+        .delete-btn {
+            background: var(--error-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        
+        .delete-btn:hover {
+            background: #d90429;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            background: var(--accent-orange);
+            color: white;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                padding: 10px 0;
+            }
+            
+            .secret-s {
+                font-size: 2.2rem;
+            }
+            
+            .title {
+                font-size: 1.8rem;
+            }
+            
+            .message {
+                max-width: 90%;
+                padding: 12px 16px;
+            }
+            
+            .input-area {
+                padding: 15px;
+            }
+            
+            .message-input {
+                padding: 12px 16px;
+                font-size: 1rem;
+            }
+            
+            .send-button {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .secret-s {
+                font-size: 1.8rem;
+            }
+            
+            .title {
+                font-size: 1.5rem;
+            }
+            
+            .modal-title {
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(231, 111, 81, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-orange);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="secret-s" id="secretS">S</div>
+                <h1 class="title">olAI</h1>
+            </div>
+            <div class="status">
+                <i class="fas fa-circle" style="color: #4ade80;"></i> Online
+            </div>
+        </header>
+        
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    Hello! I'm SolAI, your personal assistant. How can I help you today?
+                </div>
+            </div>
+            <div class="input-area">
+                <input type="text" class="message-input" id="messageInput" placeholder="Type your message here...">
+                <button class="send-button" id="sendButton">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Modal -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">SolAI Admin Panel</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="passwordSection">
+                    <div class="password-form">
+                        <div class="form-group">
+                            <label class="form-label" for="adminPassword">Enter Admin Password</label>
+                            <input type="password" id="adminPassword" class="form-input" placeholder="Henley@2003">
+                        </div>
+                        <button class="submit-btn" id="verifyPassword">Unlock Admin Panel</button>
+                    </div>
+                </div>
+                
+                <div id="adminSection" style="display: none;">
+                    <div class="knowledge-form">
+                        <div class="form-group">
+                            <label class="form-label" for="knowledgeText">Knowledge Text (What the user might ask)</label>
+                            <input type="text" id="knowledgeText" class="form-input" placeholder="e.g., What is SolAI?">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="knowledgeResponse">Response</label>
+                            <textarea id="knowledgeResponse" class="form-input" rows="3" placeholder="e.g., SolAI is a personal assistant with a secret admin panel..."></textarea>
+                        </div>
+                        <button class="submit-btn" id="addKnowledge">Add to Knowledge Base</button>
+                    </div>
+                    
+                    <div class="knowledge-list">
+                        <h3 class="list-title"><i class="fas fa-book"></i> Current Knowledge Base</h3>
+                        <div id="knowledgeItems"></div>
+                    </div>
+                    
+                    <div class="suggestions-list">
+                        <h3 class="list-title"><i class="fas fa-lightbulb"></i> User Suggestions</h3>
+                        <div id="suggestionItems"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const secretS = document.getElementById('secretS');
+        const adminModal = document.getElementById('adminModal');
+        const closeModal = document.getElementById('closeModal');
+        const passwordSection = document.getElementById('passwordSection');
+        const adminSection = document.getElementById('adminSection');
+        const adminPassword = document.getElementById('adminPassword');
+        const verifyPassword = document.getElementById('verifyPassword');
+        const knowledgeText = document.getElementById('knowledgeText');
+        const knowledgeResponse = document.getElementById('knowledgeResponse');
+        const addKnowledge = document.getElementById('addKnowledge');
+        const knowledgeItems = document.getElementById('knowledgeItems');
+        const suggestionItems = document.getElementById('suggestionItems');
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        
+        // Event Listeners
+        secretS.addEventListener('click', () => {
+            adminModal.style.display = 'block';
+            adminPassword.focus();
+        });
+        
+        closeModal.addEventListener('click', () => {
+            adminModal.style.display = 'none';
+            passwordSection.style.display = 'block';
+            adminSection.style.display = 'none';
+            adminPassword.value = '';
+        });
+        
+        window.addEventListener('click', (e) => {
+            if (e.target === adminModal) {
+                adminModal.style.display = 'none';
+                passwordSection.style.display = 'block';
+                adminSection.style.display = 'none';
+                adminPassword.value = '';
+            }
+        });
+        
+        verifyPassword.addEventListener('click', verifyAdminPassword);
+        adminPassword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') verifyAdminPassword();
+        });
+        
+        addKnowledge.addEventListener('click', addKnowledgeItem);
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        
+        // Functions
+        async function verifyAdminPassword() {
+            const password = adminPassword.value;
+            if (!password) {
+                alert('Please enter a password');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    passwordSection.style.display = 'none';
+                    adminSection.style.display = 'block';
+                    loadAdminData();
+                } else {
+                    alert('Incorrect password. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error verifying password:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+        
+        async function loadAdminData() {
+            try {
+                const response = await fetch('/api/admin/knowledge');
+                const data = await response.json();
+                
+                // Render knowledge items
+                knowledgeItems.innerHTML = '';
+                if (data.knowledge.length === 0) {
+                    knowledgeItems.innerHTML = '<p style="color: var(--text-secondary);">No knowledge items yet.</p>';
+                } else {
+                    data.knowledge.forEach(item => {
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'knowledge-item';
+                        itemEl.innerHTML = `
+                            <div class="item-text">${item.text}</div>
+                            <div class="item-response">${item.response}</div>
+                        `;
+                        knowledgeItems.appendChild(itemEl);
+                    });
+                }
+                
+                // Render suggestions
+                suggestionItems.innerHTML = '';
+                if (data.suggestions.length === 0) {
+                    suggestionItems.innerHTML = '<p style="color: var(--text-secondary);">No suggestions yet.</p>';
+                } else {
+                    data.suggestions.forEach((item, index) => {
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'suggestion-item';
+                        itemEl.innerHTML = `
+                            <div class="item-text">${item.query}</div>
+                            <span class="status-badge">Pending</span>
+                            <button class="delete-btn" data-index="${index}">Remove</button>
+                        `;
+                        suggestionItems.appendChild(itemEl);
+                    });
+                    
+                    // Add event listeners to delete buttons
+                    document.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            const index = e.target.dataset.index;
+                            try {
+                                await fetch(`/api/admin/suggestions/${index}`, { method: 'DELETE' });
+                                loadAdminData();
+                            } catch (error) {
+                                console.error('Error deleting suggestion:', error);
+                            }
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+            }
+        }
+        
+        async function addKnowledgeItem() {
+            const text = knowledgeText.value.trim();
+            const response = knowledgeResponse.value.trim();
+            
+            if (!text || !response) {
+                alert('Both fields are required');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/admin/knowledge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, response })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    knowledgeText.value = '';
+                    knowledgeResponse.value = '';
+                    loadAdminData();
+                    alert('Knowledge item added successfully!');
+                } else {
+                    alert('Error adding knowledge item: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error adding knowledge:', error);
+                alert('An error occurred while adding knowledge.');
+            }
+        }
+        
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessageToChat(message, 'user');
+            messageInput.value = '';
+            
+            // Show loading indicator
+            const loadingId = 'loading-' + Date.now();
+            addMessageToChat(`<div class="loading"></div>`, 'bot', loadingId);
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                
+                const data = await response.json();
+                
+                // Remove loading indicator
+                document.getElementById(loadingId).remove();
+                
+                // Add bot response
+                addMessageToChat(data.response, 'bot');
+            } catch (error) {
+                console.error('Error sending message:', error);
+                document.getElementById(loadingId).remove();
+                addMessageToChat("Sorry, I encountered an error. Please try again.", 'bot');
+            }
+        }
+        
+        function addMessageToChat(text, sender, id = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            if (id) messageDiv.id = id;
+            messageDiv.innerHTML = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+</body>
+</html>
