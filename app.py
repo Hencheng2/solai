@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import json
 import os
 import numpy as np
@@ -141,9 +141,8 @@ ADMIN_PASSWORD = "Henley@2003"
 
 @app.route('/')
 def index():
-    # Serve the HTML file
-    with open('index.html', 'r') as f:
-        return f.read()
+    # Serve the HTML file from the current directory
+    return send_from_directory('.', 'index.html')
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
