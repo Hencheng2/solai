@@ -36,7 +36,7 @@
             padding: 1rem 2rem;
             border-bottom: 2px solid var(--accent-green);
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
@@ -50,11 +50,12 @@
         .logo h1 {
             font-size: 1.8rem;
             font-weight: 600;
+            color: var(--text-light);
         }
         
         .secret-s {
             cursor: pointer;
-            color: var(--accent-orange);
+            color: var(--text-light);
             transition: all 0.3s ease;
             position: relative;
         }
@@ -67,11 +68,10 @@
         .container {
             display: flex;
             flex: 1;
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
             width: 100%;
             padding: 1rem;
-            gap: 1rem;
         }
         
         .chat-container {
@@ -152,41 +152,6 @@
         
         .chat-input button:hover {
             background-color: var(--accent-orange-light);
-        }
-        
-        .knowledge-panel {
-            width: 300px;
-            background-color: var(--dark-card);
-            border-radius: 12px;
-            padding: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .panel-header {
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--accent-green);
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-        
-        .knowledge-item {
-            padding: 0.75rem;
-            background-color: var(--dark-bg);
-            border-radius: 8px;
-            margin-bottom: 0.75rem;
-            border-left: 3px solid var(--accent-orange);
-        }
-        
-        .knowledge-item h4 {
-            margin-bottom: 0.25rem;
-            color: var(--accent-orange-light);
-        }
-        
-        .knowledge-item p {
-            font-size: 0.9rem;
-            color: var(--text-muted);
         }
         
         .modal {
@@ -329,14 +294,6 @@
         }
         
         @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-            
-            .knowledge-panel {
-                width: 100%;
-            }
-            
             .message {
                 max-width: 90%;
             }
@@ -347,9 +304,6 @@
     <div class="header">
         <div class="logo">
             <h1><span class="secret-s" id="secret-s">S</span>olAI</h1>
-        </div>
-        <div class="tagline">
-            Your Personal Knowledge Assistant
         </div>
     </div>
     
@@ -366,15 +320,6 @@
             <div class="chat-input">
                 <input type="text" id="user-input" placeholder="Type your message here...">
                 <button id="send-btn">Send</button>
-            </div>
-        </div>
-        
-        <div class="knowledge-panel">
-            <div class="panel-header">
-                <h3>Knowledge Base</h3>
-            </div>
-            <div id="knowledge-items">
-                <!-- Knowledge items will be dynamically added here -->
             </div>
         </div>
     </div>
@@ -431,22 +376,42 @@
     </div>
 
     <script>
-        // Knowledge base data
+        // Knowledge base data with basic responses
         let knowledgeBase = [
             {
                 id: 1,
+                title: "Greeting",
+                content: "Hello! How can I assist you today?"
+            },
+            {
+                id: 2,
+                title: "Welcome",
+                content: "Welcome to SolAI! I'm here to help with any questions you might have."
+            },
+            {
+                id: 3,
+                title: "How are you",
+                content: "I'm just a program, but I'm functioning perfectly! How can I help you?"
+            },
+            {
+                id: 4,
+                title: "Goodbye",
+                content: "Goodbye! Feel free to come back if you have more questions."
+            },
+            {
+                id: 5,
+                title: "Thanks",
+                content: "You're welcome! Is there anything else I can help with?"
+            },
+            {
+                id: 6,
                 title: "SolAI Introduction",
                 content: "SolAI is a personal knowledge assistant that helps you manage and retrieve information from your personal knowledge base."
             },
             {
-                id: 2,
+                id: 7,
                 title: "How to use SolAI",
                 content: "Simply type your questions or statements in the chat, and SolAI will try to find relevant information from the knowledge base."
-            },
-            {
-                id: 3,
-                title: "Adding Knowledge",
-                content: "Click on the 'S' in SolAI to access the admin panel where you can add new knowledge to the database."
             }
         ];
         
@@ -469,7 +434,6 @@
         const chatMessages = document.getElementById('chat-messages');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
-        const knowledgeItems = document.getElementById('knowledge-items');
         const suggestionsList = document.getElementById('suggestions-list');
         
         // Password for admin access
@@ -487,9 +451,6 @@
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
-        
-        // Initialize the knowledge panel
-        renderKnowledgeItems();
         
         // Functions
         function openPasswordModal() {
@@ -521,7 +482,6 @@
                 };
                 
                 knowledgeBase.push(newItem);
-                renderKnowledgeItems();
                 
                 knowledgeTitle.value = '';
                 knowledgeContent.value = '';
@@ -530,20 +490,6 @@
             } else {
                 alert('Please fill in both title and content.');
             }
-        }
-        
-        function renderKnowledgeItems() {
-            knowledgeItems.innerHTML = '';
-            
-            knowledgeBase.forEach(item => {
-                const itemElement = document.createElement('div');
-                itemElement.className = 'knowledge-item';
-                itemElement.innerHTML = `
-                    <h4>${item.title}</h4>
-                    <p>${item.content}</p>
-                `;
-                knowledgeItems.appendChild(itemElement);
-            });
         }
         
         function renderSuggestions() {
@@ -579,7 +525,6 @@
             };
             
             knowledgeBase.push(newItem);
-            renderKnowledgeItems();
             
             // Remove from suggestions
             learningSuggestions.splice(index, 1);
@@ -634,6 +579,23 @@
                     lowerMessage.includes(item.content.toLowerCase())) {
                     return item.content;
                 }
+            }
+            
+            // Check for common greetings and questions
+            if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
+                return "Hello! How can I help you today?";
+            }
+            
+            if (lowerMessage.includes('how are you')) {
+                return "I'm just a program, but I'm functioning perfectly! How can I help you?";
+            }
+            
+            if (lowerMessage.includes('thank')) {
+                return "You're welcome! Is there anything else I can help with?";
+            }
+            
+            if (lowerMessage.includes('bye') || lowerMessage.includes('goodbye')) {
+                return "Goodbye! Feel free to come back if you have more questions.";
             }
             
             // If no match found, add to learning suggestions and return default response
