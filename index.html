@@ -121,6 +121,12 @@
             border: 1px solid var(--accent-green);
         }
         
+        .message-info {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+        
         .chat-input {
             display: flex;
             padding: 1rem;
@@ -154,6 +160,42 @@
             background-color: var(--accent-orange-light);
         }
         
+        .chat-input button:disabled {
+            background-color: var(--text-muted);
+            cursor: not-allowed;
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 0.75rem 1rem;
+            background-color: var(--dark-bg);
+            border: 1px solid var(--accent-green);
+            border-radius: 12px;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        
         .modal {
             display: none;
             position: fixed;
@@ -172,7 +214,9 @@
             padding: 2rem;
             border-radius: 12px;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
         }
         
@@ -270,6 +314,12 @@
             flex: 1;
         }
         
+        .suggestion-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+        
         .suggestion-actions {
             display: flex;
             gap: 0.5rem;
@@ -283,19 +333,44 @@
             font-size: 0.8rem;
         }
         
-        .btn-success {
-            background-color: var(--accent-green);
-            color: white;
-        }
-        
         .btn-danger {
             background-color: #742a2a;
             color: white;
         }
         
+        .knowledge-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: var(--dark-bg);
+            border-radius: 8px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-orange);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
         @media (max-width: 768px) {
             .message {
                 max-width: 90%;
+            }
+            
+            .knowledge-stats {
+                flex-direction: column;
+                gap: 0.5rem;
             }
         }
     </style>
@@ -315,6 +390,14 @@
             <div class="chat-messages" id="chat-messages">
                 <div class="message bot-message">
                     Hello! I'm SolAI, your personal knowledge assistant. How can I help you today?
+                    <div class="message-info">Just now</div>
+                </div>
+            </div>
+            <div class="typing-indicator" id="typing-indicator">
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
                 </div>
             </div>
             <div class="chat-input">
@@ -350,6 +433,17 @@
                 <button class="close-modal" id="close-admin-modal">&times;</button>
             </div>
             
+            <div class="knowledge-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="knowledge-count">0</div>
+                    <div class="stat-label">Knowledge Items</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="suggestions-count">0</div>
+                    <div class="stat-label">Learning Suggestions</div>
+                </div>
+            </div>
+            
             <div class="form-group">
                 <label for="knowledge-title">Title:</label>
                 <input type="text" id="knowledge-title" placeholder="Enter title">
@@ -376,48 +470,6 @@
     </div>
 
     <script>
-        // Knowledge base data with basic responses
-        let knowledgeBase = [
-            {
-                id: 1,
-                title: "Greeting",
-                content: "Hello! How can I assist you today?"
-            },
-            {
-                id: 2,
-                title: "Welcome",
-                content: "Welcome to SolAI! I'm here to help with any questions you might have."
-            },
-            {
-                id: 3,
-                title: "How are you",
-                content: "I'm just a program, but I'm functioning perfectly! How can I help you?"
-            },
-            {
-                id: 4,
-                title: "Goodbye",
-                content: "Goodbye! Feel free to come back if you have more questions."
-            },
-            {
-                id: 5,
-                title: "Thanks",
-                content: "You're welcome! Is there anything else I can help with?"
-            },
-            {
-                id: 6,
-                title: "SolAI Introduction",
-                content: "SolAI is a personal knowledge assistant that helps you manage and retrieve information from your personal knowledge base."
-            },
-            {
-                id: 7,
-                title: "How to use SolAI",
-                content: "Simply type your questions or statements in the chat, and SolAI will try to find relevant information from the knowledge base."
-            }
-        ];
-        
-        // Learning suggestions
-        let learningSuggestions = [];
-        
         // DOM Elements
         const secretS = document.getElementById('secret-s');
         const passwordModal = document.getElementById('password-modal');
@@ -434,10 +486,10 @@
         const chatMessages = document.getElementById('chat-messages');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
+        const typingIndicator = document.getElementById('typing-indicator');
         const suggestionsList = document.getElementById('suggestions-list');
-        
-        // Password for admin access
-        const ADMIN_PASSWORD = "Henley@2003";
+        const knowledgeCount = document.getElementById('knowledge-count');
+        const suggestionsCount = document.getElementById('suggestions-count');
         
         // Event Listeners
         secretS.addEventListener('click', openPasswordModal);
@@ -458,157 +510,201 @@
             passwordInput.focus();
         }
         
-        function checkPassword() {
-            if (passwordInput.value === ADMIN_PASSWORD) {
-                passwordModal.style.display = 'none';
-                adminModal.style.display = 'flex';
-                passwordInput.value = '';
-                renderSuggestions();
-            } else {
-                alert('Incorrect password!');
-                passwordInput.value = '';
+        async function checkPassword() {
+            const password = passwordInput.value;
+            
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    passwordModal.style.display = 'none';
+                    adminModal.style.display = 'flex';
+                    passwordInput.value = '';
+                    loadAdminData();
+                } else {
+                    alert('Incorrect password!');
+                    passwordInput.value = '';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error connecting to server');
             }
         }
         
-        function addKnowledge() {
+        async function loadAdminData() {
+            try {
+                // Load knowledge base stats
+                const knowledgeResponse = await fetch('/api/admin/knowledge');
+                const knowledgeData = await knowledgeResponse.json();
+                knowledgeCount.textContent = knowledgeData.length;
+                
+                // Load suggestions
+                const suggestionsResponse = await fetch('/api/admin/suggestions');
+                const suggestionsData = await suggestionsResponse.json();
+                suggestionsCount.textContent = suggestionsData.length;
+                
+                renderSuggestions(suggestionsData);
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+            }
+        }
+        
+        async function addKnowledge() {
             const title = knowledgeTitle.value.trim();
             const content = knowledgeContent.value.trim();
             
-            if (title && content) {
-                const newItem = {
-                    id: knowledgeBase.length + 1,
-                    title,
-                    content
-                };
-                
-                knowledgeBase.push(newItem);
-                
-                knowledgeTitle.value = '';
-                knowledgeContent.value = '';
-                
-                alert('Knowledge added successfully!');
-            } else {
+            if (!title || !content) {
                 alert('Please fill in both title and content.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/knowledge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title,
+                        content,
+                        tags: []
+                    })
+                });
+                
+                if (response.ok) {
+                    knowledgeTitle.value = '';
+                    knowledgeContent.value = '';
+                    alert('Knowledge added successfully!');
+                    loadAdminData();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error connecting to server');
             }
         }
         
-        function renderSuggestions() {
+        function renderSuggestions(suggestions) {
             suggestionsList.innerHTML = '';
             
-            if (learningSuggestions.length === 0) {
+            if (suggestions.length === 0) {
                 suggestionsList.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No suggestions yet.</p>';
                 return;
             }
             
-            learningSuggestions.forEach((suggestion, index) => {
+            suggestions.forEach(suggestion => {
                 const suggestionElement = document.createElement('div');
                 suggestionElement.className = 'suggestion-item';
                 suggestionElement.innerHTML = `
-                    <div class="suggestion-text">${suggestion}</div>
+                    <div class="suggestion-content">
+                        <div class="suggestion-text">${suggestion.query}</div>
+                        <div class="suggestion-meta">${new Date(suggestion.created_at).toLocaleString()}</div>
+                    </div>
                     <div class="suggestion-actions">
-                        <button class="suggestion-btn btn-success" onclick="addSuggestionToKnowledge(${index})">Add</button>
-                        <button class="suggestion-btn btn-danger" onclick="removeSuggestion(${index})">Remove</button>
+                        <button class="suggestion-btn btn-danger" onclick="deleteSuggestion(${suggestion.id})">Remove</button>
                     </div>
                 `;
                 suggestionsList.appendChild(suggestionElement);
             });
         }
         
-        function addSuggestionToKnowledge(index) {
-            const suggestion = learningSuggestions[index];
+        async function deleteSuggestion(suggestionId) {
+            if (!confirm('Are you sure you want to remove this suggestion?')) {
+                return;
+            }
             
-            // Move to knowledge base
-            const newItem = {
-                id: knowledgeBase.length + 1,
-                title: `Learned: ${suggestion.substring(0, 30)}...`,
-                content: suggestion
-            };
-            
-            knowledgeBase.push(newItem);
-            
-            // Remove from suggestions
-            learningSuggestions.splice(index, 1);
-            renderSuggestions();
-            
-            alert('Suggestion added to knowledge base!');
+            try {
+                const response = await fetch('/api/admin/suggestions/' + suggestionId, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadAdminData();
+                } else {
+                    alert('Error removing suggestion');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error connecting to server');
+            }
         }
         
-        function removeSuggestion(index) {
-            learningSuggestions.splice(index, 1);
-            renderSuggestions();
-        }
-        
-        function sendMessage() {
+        async function sendMessage() {
             const message = userInput.value.trim();
             
-            if (message) {
-                // Add user message to chat
-                addMessageToChat(message, 'user');
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessageToChat(message, 'user');
+            
+            // Clear input and disable send button
+            userInput.value = '';
+            sendBtn.disabled = true;
+            
+            // Show typing indicator
+            typingIndicator.style.display = 'block';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
                 
-                // Process the message and get bot response
-                const response = getBotResponse(message);
+                const data = await response.json();
                 
-                // Add bot response to chat after a short delay
-                setTimeout(() => {
-                    addMessageToChat(response, 'bot');
-                }, 500);
+                // Hide typing indicator
+                typingIndicator.style.display = 'none';
                 
-                // Clear input
-                userInput.value = '';
+                // Add bot response to chat
+                let responseText = data.response;
+                if (data.match_found) {
+                    responseText += ` <div class="message-info">Source: ${data.source} (Similarity: ${(data.similarity * 100).toFixed(1)}%)</div>`;
+                }
+                
+                addMessageToChat(responseText, 'bot');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                typingIndicator.style.display = 'none';
+                addMessageToChat("Sorry, I'm having trouble connecting to the server. Please try again later.", 'bot');
+            } finally {
+                sendBtn.disabled = false;
+                userInput.focus();
             }
         }
         
         function addMessageToChat(message, sender) {
             const messageElement = document.createElement('div');
             messageElement.className = `message ${sender}-message`;
-            messageElement.textContent = message;
+            
+            if (sender === 'user') {
+                messageElement.textContent = message;
+            } else {
+                messageElement.innerHTML = message;
+            }
+            
             chatMessages.appendChild(messageElement);
             
             // Scroll to bottom
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
         
-        function getBotResponse(message) {
-            // Convert message to lowercase for easier matching
-            const lowerMessage = message.toLowerCase();
-            
-            // Try to find a match in the knowledge base
-            for (const item of knowledgeBase) {
-                if (lowerMessage.includes(item.title.toLowerCase()) || 
-                    item.content.toLowerCase().includes(lowerMessage) ||
-                    lowerMessage.includes(item.content.toLowerCase())) {
-                    return item.content;
-                }
-            }
-            
-            // Check for common greetings and questions
-            if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-                return "Hello! How can I help you today?";
-            }
-            
-            if (lowerMessage.includes('how are you')) {
-                return "I'm just a program, but I'm functioning perfectly! How can I help you?";
-            }
-            
-            if (lowerMessage.includes('thank')) {
-                return "You're welcome! Is there anything else I can help with?";
-            }
-            
-            if (lowerMessage.includes('bye') || lowerMessage.includes('goodbye')) {
-                return "Goodbye! Feel free to come back if you have more questions.";
-            }
-            
-            // If no match found, add to learning suggestions and return default response
-            if (!learningSuggestions.includes(message)) {
-                learningSuggestions.push(message);
-            }
-            
-            return "I'm still learning about this topic. I've noted your question and will try to learn more about it soon!";
-        }
-        
         // Make functions available globally for onclick handlers
-        window.addSuggestionToKnowledge = addSuggestionToKnowledge;
-        window.removeSuggestion = removeSuggestion;
+        window.deleteSuggestion = deleteSuggestion;
     </script>
 </body>
 </html>
