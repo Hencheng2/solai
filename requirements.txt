@@ -2,3 +2,5 @@ flask==2.3.3
 sentence-transformers==2.2.2
 numpy
 gunicorn==23.0.0
+Flask==2.3.3
+Flask-Cors==4.0.0
