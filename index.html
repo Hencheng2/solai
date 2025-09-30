@@ -3,17 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SolAI - Personal Chat Bot</title>
+    <title>SolAI - Personal Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --dark-bg: #0a0f0d;
-            --dark-card: #121a17;
-            --accent-green: #1a4731;
-            --accent-green-light: #22543d;
-            --accent-orange: #c05621;
-            --accent-orange-light: #dd6b20;
-            --text-light: #e2e8f0;
-            --text-muted: #a0aec0;
+            --dark-bg: #0a1929;
+            --darker-bg: #07121d;
+            --card-bg: #112233;
+            --accent-green: #2a9d8f;
+            --accent-orange: #e76f51;
+            --text-primary: #e0e1dd;
+            --text-secondary: #a8dadc;
+            --border-color: #1e3a5f;
+            --success-color: #2a9d8f;
+            --error-color: #e63946;
         }
         
         * {
@@ -24,178 +27,171 @@
         }
         
         body {
-            background-color: var(--dark-bg);
-            color: var(--text-light);
+            background: var(--dark-bg);
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(42, 157, 143, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(231, 111, 81, 0.1) 0%, transparent 20%);
         }
         
-        .header {
-            background-color: var(--dark-card);
-            padding: 1rem 2rem;
-            border-bottom: 2px solid var(--accent-green);
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 15px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .logo {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .logo h1 {
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: var(--text-light);
+            gap: 12px;
         }
         
         .secret-s {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--accent-green);
             cursor: pointer;
-            color: var(--text-light);
-            transition: all 0.3s ease;
             position: relative;
+            transition: transform 0.3s ease;
         }
         
         .secret-s:hover {
-            color: var(--accent-orange-light);
             transform: scale(1.1);
         }
         
-        .container {
-            display: flex;
-            flex: 1;
-            max-width: 800px;
-            margin: 0 auto;
+        .secret-s::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
             width: 100%;
-            padding: 1rem;
+            height: 3px;
+            background: var(--accent-orange);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .secret-s:hover::after {
+            transform: scaleX(1);
+        }
+        
+        .title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--accent-green), var(--accent-orange));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
         }
         
         .chat-container {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background-color: var(--dark-card);
-            border-radius: 12px;
+            background: var(--card-bg);
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .chat-header {
-            background-color: var(--accent-green);
-            padding: 1rem;
-            text-align: center;
-            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
         }
         
         .chat-messages {
             flex: 1;
-            padding: 1rem;
+            padding: 25px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-            max-height: 60vh;
+            gap: 20px;
         }
         
         .message {
-            padding: 0.75rem 1rem;
-            border-radius: 12px;
             max-width: 80%;
-            line-height: 1.4;
+            padding: 15px 20px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .user-message {
-            background-color: var(--accent-green-light);
             align-self: flex-end;
-            border-bottom-right-radius: 4px;
+            background: var(--accent-orange);
+            border-bottom-right-radius: 5px;
         }
         
         .bot-message {
-            background-color: var(--dark-bg);
             align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            border: 1px solid var(--accent-green);
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 5px;
         }
         
-        .message-info {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 0.25rem;
-        }
-        
-        .chat-input {
+        .input-area {
             display: flex;
-            padding: 1rem;
-            background-color: var(--dark-card);
-            border-top: 1px solid var(--accent-green);
+            padding: 20px;
+            background: var(--darker-bg);
+            border-top: 1px solid var(--border-color);
         }
         
-        .chat-input input {
+        .message-input {
             flex: 1;
-            padding: 0.75rem 1rem;
+            padding: 14px 20px;
             border: none;
-            border-radius: 8px;
-            background-color: var(--dark-bg);
-            color: var(--text-light);
+            border-radius: 30px;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            font-size: 1.1rem;
             outline: none;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.3s;
         }
         
-        .chat-input button {
-            margin-left: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            background-color: var(--accent-orange);
+        .message-input:focus {
+            border-color: var(--accent-green);
+        }
+        
+        .send-button {
+            background: var(--accent-green);
             color: white;
             border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-        
-        .chat-input button:hover {
-            background-color: var(--accent-orange-light);
-        }
-        
-        .chat-input button:disabled {
-            background-color: var(--text-muted);
-            cursor: not-allowed;
-        }
-        
-        .typing-indicator {
-            display: none;
-            padding: 0.75rem 1rem;
-            background-color: var(--dark-bg);
-            border: 1px solid var(--accent-green);
-            border-radius: 12px;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-        
-        .typing-dots {
-            display: flex;
-            gap: 4px;
-        }
-        
-        .typing-dot {
-            width: 8px;
-            height: 8px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background-color: var(--text-muted);
-            animation: typing 1.4s infinite ease-in-out;
+            margin-left: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
         }
         
-        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        
-        @keyframes typing {
-            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-            40% { transform: scale(1); opacity: 1; }
+        .send-button:hover {
+            background: var(--accent-orange);
+            transform: rotate(90deg);
         }
         
+        /* Admin Modal */
         .modal {
             display: none;
             position: fixed;
@@ -203,508 +199,522 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background: rgba(7, 18, 29, 0.9);
             z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            backdrop-filter: blur(5px);
+            animation: modalFadeIn 0.4s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
         .modal-content {
-            background-color: var(--dark-card);
-            padding: 2rem;
-            border-radius: 12px;
+            background: var(--card-bg);
             width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            max-width: 800px;
+            margin: 5% auto;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
         }
         
         .modal-header {
+            padding: 20px;
+            background: var(--darker-bg);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
         }
         
-        .modal-header h2 {
-            color: var(--accent-orange);
+        .modal-title {
+            font-size: 1.8rem;
+            color: var(--accent-green);
         }
         
         .close-modal {
             background: none;
             border: none;
-            color: var(--text-muted);
-            font-size: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 1.8rem;
             cursor: pointer;
+            transition: color 0.3s;
         }
         
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-light);
-        }
-        
-        .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border-radius: 8px;
-            border: 1px solid var(--accent-green);
-            background-color: var(--dark-bg);
-            color: var(--text-light);
-            outline: none;
-        }
-        
-        .form-group textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-        
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.75rem;
-            margin-top: 1.5rem;
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary {
-            background-color: var(--accent-orange);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: var(--accent-orange-light);
-        }
-        
-        .btn-secondary {
-            background-color: var(--dark-bg);
-            color: var(--text-light);
-            border: 1px solid var(--accent-green);
-        }
-        
-        .btn-secondary:hover {
-            background-color: var(--accent-green);
-        }
-        
-        .suggestion-item {
-            padding: 0.75rem;
-            background-color: var(--dark-bg);
-            border-radius: 8px;
-            margin-bottom: 0.75rem;
-            border-left: 3px solid var(--accent-green);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .suggestion-text {
-            flex: 1;
-        }
-        
-        .suggestion-meta {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 0.25rem;
-        }
-        
-        .suggestion-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .suggestion-btn {
-            padding: 0.25rem 0.5rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-        
-        .btn-danger {
-            background-color: #742a2a;
-            color: white;
-        }
-        
-        .knowledge-stats {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background-color: var(--dark-bg);
-            border-radius: 8px;
-        }
-        
-        .stat-item {
-            text-align: center;
-            flex: 1;
-        }
-        
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
+        .close-modal:hover {
             color: var(--accent-orange);
         }
         
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
+        .modal-body {
+            padding: 25px;
+            max-height: 70vh;
+            overflow-y: auto;
         }
         
+        .password-form, .knowledge-form {
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-green);
+        }
+        
+        .submit-btn {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background: var(--accent-orange);
+            transform: translateY(-2px);
+        }
+        
+        .knowledge-list, .suggestions-list {
+            margin-top: 25px;
+        }
+        
+        .list-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .knowledge-item, .suggestion-item {
+            background: var(--dark-bg);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--accent-green);
+        }
+        
+        .suggestion-item {
+            border-left-color: var(--accent-orange);
+        }
+        
+        .item-text {
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+        
+        .item-response {
+            color: var(--text-secondary);
+        }
+        
+        .delete-btn {
+            background: var(--error-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        
+        .delete-btn:hover {
+            background: #d90429;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            background: var(--accent-orange);
+            color: white;
+        }
+        
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .message {
-                max-width: 90%;
+            .container {
+                padding: 10px;
             }
             
-            .knowledge-stats {
-                flex-direction: column;
-                gap: 0.5rem;
+            header {
+                padding: 10px 0;
             }
+            
+            .secret-s {
+                font-size: 2.2rem;
+            }
+            
+            .title {
+                font-size: 1.8rem;
+            }
+            
+            .message {
+                max-width: 90%;
+                padding: 12px 16px;
+            }
+            
+            .input-area {
+                padding: 15px;
+            }
+            
+            .message-input {
+                padding: 12px 16px;
+                font-size: 1rem;
+            }
+            
+            .send-button {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .secret-s {
+                font-size: 1.8rem;
+            }
+            
+            .title {
+                font-size: 1.5rem;
+            }
+            
+            .modal-title {
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(231, 111, 81, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-orange);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">
-            <h1><span class="secret-s" id="secret-s">S</span>olAI</h1>
-        </div>
-    </div>
-    
     <div class="container">
+        <header>
+            <div class="logo">
+                <div class="secret-s" id="secretS">S</div>
+                <h1 class="title">olAI</h1>
+            </div>
+            <div class="status">
+                <i class="fas fa-circle" style="color: #4ade80;"></i> Online
+            </div>
+        </header>
+        
         <div class="chat-container">
-            <div class="chat-header">
-                Chat with SolAI
-            </div>
-            <div class="chat-messages" id="chat-messages">
+            <div class="chat-messages" id="chatMessages">
                 <div class="message bot-message">
-                    Hello! I'm SolAI, your personal knowledge assistant. How can I help you today?
-                    <div class="message-info">Just now</div>
+                    Hello! I'm SolAI, your personal assistant. How can I help you today?
                 </div>
             </div>
-            <div class="typing-indicator" id="typing-indicator">
-                <div class="typing-dots">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>
-            </div>
-            <div class="chat-input">
-                <input type="text" id="user-input" placeholder="Type your message here...">
-                <button id="send-btn">Send</button>
+            <div class="input-area">
+                <input type="text" class="message-input" id="messageInput" placeholder="Type your message here...">
+                <button class="send-button" id="sendButton">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
             </div>
         </div>
     </div>
     
-    <!-- Password Modal -->
-    <div class="modal" id="password-modal">
+    <!-- Admin Modal -->
+    <div class="modal" id="adminModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Admin Access</h2>
-                <button class="close-modal" id="close-password-modal">&times;</button>
+                <h2 class="modal-title">SolAI Admin Panel</h2>
+                <button class="close-modal" id="closeModal">&times;</button>
             </div>
-            <div class="form-group">
-                <label for="password-input">Enter Password:</label>
-                <input type="password" id="password-input" placeholder="Password">
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" id="cancel-password">Cancel</button>
-                <button class="btn btn-primary" id="submit-password">Submit</button>
+            <div class="modal-body">
+                <div id="passwordSection">
+                    <div class="password-form">
+                        <div class="form-group">
+                            <label class="form-label" for="adminPassword">Enter Admin Password</label>
+                            <input type="password" id="adminPassword" class="form-input" placeholder="Henley@2003">
+                        </div>
+                        <button class="submit-btn" id="verifyPassword">Unlock Admin Panel</button>
+                    </div>
+                </div>
+                
+                <div id="adminSection" style="display: none;">
+                    <div class="knowledge-form">
+                        <div class="form-group">
+                            <label class="form-label" for="knowledgeText">Knowledge Text (What the user might ask)</label>
+                            <input type="text" id="knowledgeText" class="form-input" placeholder="e.g., What is SolAI?">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="knowledgeResponse">Response</label>
+                            <textarea id="knowledgeResponse" class="form-input" rows="3" placeholder="e.g., SolAI is a personal assistant with a secret admin panel..."></textarea>
+                        </div>
+                        <button class="submit-btn" id="addKnowledge">Add to Knowledge Base</button>
+                    </div>
+                    
+                    <div class="knowledge-list">
+                        <h3 class="list-title"><i class="fas fa-book"></i> Current Knowledge Base</h3>
+                        <div id="knowledgeItems"></div>
+                    </div>
+                    
+                    <div class="suggestions-list">
+                        <h3 class="list-title"><i class="fas fa-lightbulb"></i> User Suggestions</h3>
+                        <div id="suggestionItems"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- Admin Panel Modal -->
-    <div class="modal" id="admin-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Knowledge Management</h2>
-                <button class="close-modal" id="close-admin-modal">&times;</button>
-            </div>
-            
-            <div class="knowledge-stats">
-                <div class="stat-item">
-                    <div class="stat-value" id="knowledge-count">0</div>
-                    <div class="stat-label">Knowledge Items</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="suggestions-count">0</div>
-                    <div class="stat-label">Learning Suggestions</div>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="knowledge-title">Title:</label>
-                <input type="text" id="knowledge-title" placeholder="Enter title">
-            </div>
-            
-            <div class="form-group">
-                <label for="knowledge-content">Content:</label>
-                <textarea id="knowledge-content" placeholder="Enter knowledge content"></textarea>
-            </div>
-            
-            <div class="modal-actions">
-                <button class="btn btn-secondary" id="cancel-add">Cancel</button>
-                <button class="btn btn-primary" id="add-knowledge">Add to Knowledge Base</button>
-            </div>
-            
-            <div class="panel-header" style="margin-top: 2rem;">
-                <h3>Learning Suggestions</h3>
-            </div>
-            
-            <div id="suggestions-list">
-                <!-- Suggestions will be dynamically added here -->
-            </div>
-        </div>
-    </div>
-
     <script>
         // DOM Elements
-        const secretS = document.getElementById('secret-s');
-        const passwordModal = document.getElementById('password-modal');
-        const adminModal = document.getElementById('admin-modal');
-        const closePasswordModal = document.getElementById('close-password-modal');
-        const closeAdminModal = document.getElementById('close-admin-modal');
-        const cancelPassword = document.getElementById('cancel-password');
-        const submitPassword = document.getElementById('submit-password');
-        const passwordInput = document.getElementById('password-input');
-        const cancelAdd = document.getElementById('cancel-add');
-        const addKnowledgeBtn = document.getElementById('add-knowledge');
-        const knowledgeTitle = document.getElementById('knowledge-title');
-        const knowledgeContent = document.getElementById('knowledge-content');
-        const chatMessages = document.getElementById('chat-messages');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const typingIndicator = document.getElementById('typing-indicator');
-        const suggestionsList = document.getElementById('suggestions-list');
-        const knowledgeCount = document.getElementById('knowledge-count');
-        const suggestionsCount = document.getElementById('suggestions-count');
+        const secretS = document.getElementById('secretS');
+        const adminModal = document.getElementById('adminModal');
+        const closeModal = document.getElementById('closeModal');
+        const passwordSection = document.getElementById('passwordSection');
+        const adminSection = document.getElementById('adminSection');
+        const adminPassword = document.getElementById('adminPassword');
+        const verifyPassword = document.getElementById('verifyPassword');
+        const knowledgeText = document.getElementById('knowledgeText');
+        const knowledgeResponse = document.getElementById('knowledgeResponse');
+        const addKnowledge = document.getElementById('addKnowledge');
+        const knowledgeItems = document.getElementById('knowledgeItems');
+        const suggestionItems = document.getElementById('suggestionItems');
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
         
         // Event Listeners
-        secretS.addEventListener('click', openPasswordModal);
-        closePasswordModal.addEventListener('click', () => passwordModal.style.display = 'none');
-        closeAdminModal.addEventListener('click', () => adminModal.style.display = 'none');
-        cancelPassword.addEventListener('click', () => passwordModal.style.display = 'none');
-        submitPassword.addEventListener('click', checkPassword);
-        cancelAdd.addEventListener('click', () => adminModal.style.display = 'none');
-        addKnowledgeBtn.addEventListener('click', addKnowledge);
-        sendBtn.addEventListener('click', sendMessage);
-        userInput.addEventListener('keypress', (e) => {
+        secretS.addEventListener('click', () => {
+            adminModal.style.display = 'block';
+            adminPassword.focus();
+        });
+        
+        closeModal.addEventListener('click', () => {
+            adminModal.style.display = 'none';
+            passwordSection.style.display = 'block';
+            adminSection.style.display = 'none';
+            adminPassword.value = '';
+        });
+        
+        window.addEventListener('click', (e) => {
+            if (e.target === adminModal) {
+                adminModal.style.display = 'none';
+                passwordSection.style.display = 'block';
+                adminSection.style.display = 'none';
+                adminPassword.value = '';
+            }
+        });
+        
+        verifyPassword.addEventListener('click', verifyAdminPassword);
+        adminPassword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') verifyAdminPassword();
+        });
+        
+        addKnowledge.addEventListener('click', addKnowledgeItem);
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
         
         // Functions
-        function openPasswordModal() {
-            passwordModal.style.display = 'flex';
-            passwordInput.focus();
-        }
-        
-        async function checkPassword() {
-            const password = passwordInput.value;
+        async function verifyAdminPassword() {
+            const password = adminPassword.value;
+            if (!password) {
+                alert('Please enter a password');
+                return;
+            }
             
             try {
-                const response = await fetch('/api/admin/login', {
+                const response = await fetch('/api/admin/verify', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password })
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    passwordModal.style.display = 'none';
-                    adminModal.style.display = 'flex';
-                    passwordInput.value = '';
+                    passwordSection.style.display = 'none';
+                    adminSection.style.display = 'block';
                     loadAdminData();
                 } else {
-                    alert('Incorrect password!');
-                    passwordInput.value = '';
+                    alert('Incorrect password. Please try again.');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error connecting to server');
+                console.error('Error verifying password:', error);
+                alert('An error occurred. Please try again.');
             }
         }
         
         async function loadAdminData() {
             try {
-                // Load knowledge base stats
-                const knowledgeResponse = await fetch('/api/admin/knowledge');
-                const knowledgeData = await knowledgeResponse.json();
-                knowledgeCount.textContent = knowledgeData.length;
+                const response = await fetch('/api/admin/knowledge');
+                const data = await response.json();
                 
-                // Load suggestions
-                const suggestionsResponse = await fetch('/api/admin/suggestions');
-                const suggestionsData = await suggestionsResponse.json();
-                suggestionsCount.textContent = suggestionsData.length;
+                // Render knowledge items
+                knowledgeItems.innerHTML = '';
+                if (data.knowledge.length === 0) {
+                    knowledgeItems.innerHTML = '<p style="color: var(--text-secondary);">No knowledge items yet.</p>';
+                } else {
+                    data.knowledge.forEach(item => {
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'knowledge-item';
+                        itemEl.innerHTML = `
+                            <div class="item-text">${item.text}</div>
+                            <div class="item-response">${item.response}</div>
+                        `;
+                        knowledgeItems.appendChild(itemEl);
+                    });
+                }
                 
-                renderSuggestions(suggestionsData);
+                // Render suggestions
+                suggestionItems.innerHTML = '';
+                if (data.suggestions.length === 0) {
+                    suggestionItems.innerHTML = '<p style="color: var(--text-secondary);">No suggestions yet.</p>';
+                } else {
+                    data.suggestions.forEach((item, index) => {
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'suggestion-item';
+                        itemEl.innerHTML = `
+                            <div class="item-text">${item.query}</div>
+                            <span class="status-badge">Pending</span>
+                            <button class="delete-btn" data-index="${index}">Remove</button>
+                        `;
+                        suggestionItems.appendChild(itemEl);
+                    });
+                    
+                    // Add event listeners to delete buttons
+                    document.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            const index = e.target.dataset.index;
+                            try {
+                                await fetch(`/api/admin/suggestions/${index}`, { method: 'DELETE' });
+                                loadAdminData();
+                            } catch (error) {
+                                console.error('Error deleting suggestion:', error);
+                            }
+                        });
+                    });
+                }
             } catch (error) {
                 console.error('Error loading admin data:', error);
             }
         }
         
-        async function addKnowledge() {
-            const title = knowledgeTitle.value.trim();
-            const content = knowledgeContent.value.trim();
+        async function addKnowledgeItem() {
+            const text = knowledgeText.value.trim();
+            const response = knowledgeResponse.value.trim();
             
-            if (!title || !content) {
-                alert('Please fill in both title and content.');
+            if (!text || !response) {
+                alert('Both fields are required');
                 return;
             }
             
             try {
-                const response = await fetch('/api/admin/knowledge', {
+                const res = await fetch('/api/admin/knowledge', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        title,
-                        content,
-                        tags: []
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, response })
                 });
                 
-                if (response.ok) {
-                    knowledgeTitle.value = '';
-                    knowledgeContent.value = '';
-                    alert('Knowledge added successfully!');
-                    loadAdminData();
-                } else {
-                    const error = await response.json();
-                    alert('Error: ' + error.error);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error connecting to server');
-            }
-        }
-        
-        function renderSuggestions(suggestions) {
-            suggestionsList.innerHTML = '';
-            
-            if (suggestions.length === 0) {
-                suggestionsList.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No suggestions yet.</p>';
-                return;
-            }
-            
-            suggestions.forEach(suggestion => {
-                const suggestionElement = document.createElement('div');
-                suggestionElement.className = 'suggestion-item';
-                suggestionElement.innerHTML = `
-                    <div class="suggestion-content">
-                        <div class="suggestion-text">${suggestion.query}</div>
-                        <div class="suggestion-meta">${new Date(suggestion.created_at).toLocaleString()}</div>
-                    </div>
-                    <div class="suggestion-actions">
-                        <button class="suggestion-btn btn-danger" onclick="deleteSuggestion(${suggestion.id})">Remove</button>
-                    </div>
-                `;
-                suggestionsList.appendChild(suggestionElement);
-            });
-        }
-        
-        async function deleteSuggestion(suggestionId) {
-            if (!confirm('Are you sure you want to remove this suggestion?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/admin/suggestions/' + suggestionId, {
-                    method: 'DELETE'
-                });
+                const data = await res.json();
                 
-                if (response.ok) {
+                if (data.success) {
+                    knowledgeText.value = '';
+                    knowledgeResponse.value = '';
                     loadAdminData();
+                    alert('Knowledge item added successfully!');
                 } else {
-                    alert('Error removing suggestion');
+                    alert('Error adding knowledge item: ' + (data.error || 'Unknown error'));
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error connecting to server');
+                console.error('Error adding knowledge:', error);
+                alert('An error occurred while adding knowledge.');
             }
         }
         
         async function sendMessage() {
-            const message = userInput.value.trim();
-            
+            const message = messageInput.value.trim();
             if (!message) return;
             
             // Add user message to chat
             addMessageToChat(message, 'user');
+            messageInput.value = '';
             
-            // Clear input and disable send button
-            userInput.value = '';
-            sendBtn.disabled = true;
-            
-            // Show typing indicator
-            typingIndicator.style.display = 'block';
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            // Show loading indicator
+            const loadingId = 'loading-' + Date.now();
+            addMessageToChat(`<div class="loading"></div>`, 'bot', loadingId);
             
             try {
                 const response = await fetch('/api/chat', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message })
                 });
                 
                 const data = await response.json();
                 
-                // Hide typing indicator
-                typingIndicator.style.display = 'none';
+                // Remove loading indicator
+                document.getElementById(loadingId).remove();
                 
-                // Add bot response to chat
-                let responseText = data.response;
-                if (data.match_found) {
-                    responseText += ` <div class="message-info">Source: ${data.source} (Similarity: ${(data.similarity * 100).toFixed(1)}%)</div>`;
-                }
-                
-                addMessageToChat(responseText, 'bot');
-                
+                // Add bot response
+                addMessageToChat(data.response, 'bot');
             } catch (error) {
-                console.error('Error:', error);
-                typingIndicator.style.display = 'none';
-                addMessageToChat("Sorry, I'm having trouble connecting to the server. Please try again later.", 'bot');
-            } finally {
-                sendBtn.disabled = false;
-                userInput.focus();
+                console.error('Error sending message:', error);
+                document.getElementById(loadingId).remove();
+                addMessageToChat("Sorry, I encountered an error. Please try again.", 'bot');
             }
         }
         
-        function addMessageToChat(message, sender) {
-            const messageElement = document.createElement('div');
-            messageElement.className = `message ${sender}-message`;
-            
-            if (sender === 'user') {
-                messageElement.textContent = message;
-            } else {
-                messageElement.innerHTML = message;
-            }
-            
-            chatMessages.appendChild(messageElement);
-            
-            // Scroll to bottom
+        function addMessageToChat(text, sender, id = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            if (id) messageDiv.id = id;
+            messageDiv.innerHTML = text;
+            chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
-        
-        // Make functions available globally for onclick handlers
-        window.deleteSuggestion = deleteSuggestion;
     </script>
 </body>
 </html>
