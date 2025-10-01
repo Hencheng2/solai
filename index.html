@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolAI - Personal Chat Bot</title>
+    <style>
+        :root {
+            --bg-dark: #0a0f0d;
+            --bg-card: #0f1a16;
+            --primary-green: #1a3d2f;
+            --accent-green: #2d6a4f;
+            --highlight-green: #52b788;
+            --accent-orange: #d8572a;
+            --highlight-orange: #e76f51;
+            --text-light: #f8f9fa;
+            --text-muted: #adb5bd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: var(--primary-green);
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .secret-s {
+            color: var(--highlight-orange);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .secret-s:hover::after {
+            content: "Admin";
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--accent-orange);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            max-width: 100%;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            max-width: 80%;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .user-message {
+            background-color: var(--accent-green);
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-message {
+            background-color: var(--primary-green);
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            text-align: right;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: none;
+            border-radius: 24px;
+            background-color: var(--bg-card);
+            color: var(--text-light);
+            font-size: 1rem;
+            outline: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .message-input:focus {
+            box-shadow: 0 0 0 2px var(--highlight-green);
+        }
+
+        .send-button {
+            background-color: var(--accent-orange);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .send-button:hover {
+            background-color: var(--highlight-orange);
+            transform: scale(1.05);
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+        }
+
+        .admin-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 100%;
+            max-width: 400px;
+            height: 100%;
+            background-color: var(--bg-card);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+            transition: right 0.3s ease;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .admin-panel.active {
+            right: 0;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--primary-green);
+        }
+
+        .admin-header h2 {
+            color: var(--highlight-orange);
+        }
+
+        .close-admin {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-admin:hover {
+            color: var(--highlight-orange);
+        }
+
+        .password-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--primary-green);
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .admin-button {
+            background-color: var(--accent-orange);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: 100%;
+        }
+
+        .admin-button:hover {
+            background-color: var(--highlight-orange);
+        }
+
+        .admin-content {
+            display: none;
+        }
+
+        .admin-content.active {
+            display: block;
+        }
+
+        .knowledge-form {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--primary-green);
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            resize: vertical;
+        }
+
+        .suggestions-list {
+            margin-top: 1.5rem;
+        }
+
+        .suggestion-item {
+            background-color: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            border-left: 3px solid var(--accent-orange);
+        }
+
+        .suggestion-text {
+            margin-bottom: 0.5rem;
+        }
+
+        .suggestion-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .suggestion-button {
+            padding: 0.3rem 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .add-button {
+            background-color: var(--accent-green);
+            color: white;
+        }
+
+        .ignore-button {
+            background-color: var(--bg-dark);
+            color: var(--text-muted);
+            border: 1px solid var(--text-muted);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            display: none;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .admin-panel {
+                max-width: 100%;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .chat-container {
+                padding: 1rem;
+            }
+            
+            .message {
+                max-width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><span class="secret-s" id="secretS">S</span>olAI</h1>
+    </div>
+
+    <div class="container">
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    Hello! I'm SolAI, your personal assistant. How can I help you today?
+                    <div class="message-time" id="currentTime"></div>
+                </div>
+            </div>
+            <div class="input-container">
+                <input type="text" class="message-input" id="messageInput" placeholder="Type your message here...">
+                <button class="send-button" id="sendButton">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="admin-panel" id="adminPanel">
+        <div class="admin-header">
+            <h2>Admin Panel</h2>
+            <button class="close-admin" id="closeAdmin">×</button>
+        </div>
+        
+        <div class="password-section" id="passwordSection">
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter admin password">
+            <button class="admin-button" id="passwordButton">Access Admin Panel</button>
+        </div>
+        
+        <div class="admin-content" id="adminContent">
+            <div class="knowledge-form">
+                <h3>Add Knowledge</h3>
+                <div class="form-group">
+                    <label for="questionInput">Question/Keyword</label>
+                    <input type="text" class="form-control" id="questionInput" placeholder="Enter question or keyword">
+                </div>
+                <div class="form-group">
+                    <label for="answerInput">Answer/Information</label>
+                    <textarea class="form-control" id="answerInput" rows="4" placeholder="Enter the answer or information"></textarea>
+                </div>
+                <button class="admin-button" id="addKnowledgeButton">Add to Knowledge Base</button>
+            </div>
+            
+            <div class="suggestions-list">
+                <h3>Learning Suggestions</h3>
+                <div id="suggestionsContainer">
+                    <!-- Suggestions will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Database simulation (in a real app, this would be a backend)
+        let knowledgeBase = [
+            { question: "hello", answer: "Hello! How can I assist you today?" },
+            { question: "what is your name", answer: "I'm SolAI, your personal assistant." },
+            { question: "how are you", answer: "I'm just a program, but I'm functioning perfectly! How can I help you?" },
+            { question: "what can you do", answer: "I can answer questions based on my knowledge base. If I don't know something, I'll let you know and suggest adding it to my database." }
+        ];
+
+        let learningSuggestions = [];
+
+        // DOM Elements
+        const secretS = document.getElementById('secretS');
+        const adminPanel = document.getElementById('adminPanel');
+        const overlay = document.getElementById('overlay');
+        const closeAdmin = document.getElementById('closeAdmin');
+        const passwordSection = document.getElementById('passwordSection');
+        const adminContent = document.getElementById('adminContent');
+        const passwordInput = document.getElementById('passwordInput');
+        const passwordButton = document.getElementById('passwordButton');
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const questionInput = document.getElementById('questionInput');
+        const answerInput = document.getElementById('answerInput');
+        const addKnowledgeButton = document.getElementById('addKnowledgeButton');
+        const suggestionsContainer = document.getElementById('suggestionsContainer');
+        const currentTimeElement = document.getElementById('currentTime');
+
+        // Set current time
+        function updateTime() {
+            const now = new Date();
+            currentTimeElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        updateTime();
+        setInterval(updateTime, 60000);
+
+        // Password protection for admin panel
+        secretS.addEventListener('click', () => {
+            adminPanel.classList.add('active');
+            overlay.classList.add('active');
+        });
+
+        closeAdmin.addEventListener('click', () => {
+            adminPanel.classList.remove('active');
+            overlay.classList.remove('active');
+            passwordSection.style.display = 'block';
+            adminContent.classList.remove('active');
+            passwordInput.value = '';
+        });
+
+        overlay.addEventListener('click', () => {
+            adminPanel.classList.remove('active');
+            overlay.classList.remove('active');
+            passwordSection.style.display = 'block';
+            adminContent.classList.remove('active');
+            passwordInput.value = '';
+        });
+
+        passwordButton.addEventListener('click', () => {
+            if (passwordInput.value === 'Henley@2003') {
+                passwordSection.style.display = 'none';
+                adminContent.classList.add('active');
+                renderSuggestions();
+            } else {
+                alert('Incorrect password!');
+                passwordInput.value = '';
+            }
+        });
+
+        // Chat functionality
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.textContent = text;
+            messageDiv.appendChild(timeDiv);
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function findAnswer(question) {
+            const lowerQuestion = question.toLowerCase();
+            
+            // Exact match
+            for (const item of knowledgeBase) {
+                if (lowerQuestion.includes(item.question.toLowerCase())) {
+                    return item.answer;
+                }
+            }
+            
+            // Semantic match (simplified)
+            for (const item of knowledgeBase) {
+                const keywords = item.question.toLowerCase().split(' ');
+                let matchCount = 0;
+                
+                for (const keyword of keywords) {
+                    if (lowerQuestion.includes(keyword) && keyword.length > 3) {
+                        matchCount++;
+                    }
+                }
+                
+                if (matchCount >= keywords.length / 2) {
+                    return item.answer;
+                }
+            }
+            
+            return null;
+        }
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message === '') return;
+            
+            addMessage(message, true);
+            messageInput.value = '';
+            
+            // Simulate typing delay
+            setTimeout(() => {
+                const answer = findAnswer(message);
+                
+                if (answer) {
+                    addMessage(answer, false);
+                } else {
+                    addMessage("I'm still learning about that. I've noted your question and will try to learn more about it soon.", false);
+                    
+                    // Add to learning suggestions
+                    if (!learningSuggestions.includes(message)) {
+                        learningSuggestions.push(message);
+                        renderSuggestions();
+                    }
+                }
+            }, 1000);
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Admin functionality
+        addKnowledgeButton.addEventListener('click', () => {
+            const question = questionInput.value.trim();
+            const answer = answerInput.value.trim();
+            
+            if (question && answer) {
+                knowledgeBase.push({ question, answer });
+                questionInput.value = '';
+                answerInput.value = '';
+                alert('Knowledge added successfully!');
+            } else {
+                alert('Please fill in both fields.');
+            }
+        });
+
+        function renderSuggestions() {
+            suggestionsContainer.innerHTML = '';
+            
+            if (learningSuggestions.length === 0) {
+                suggestionsContainer.innerHTML = '<p>No learning suggestions at the moment.</p>';
+                return;
+            }
+            
+            learningSuggestions.forEach((suggestion, index) => {
+                const suggestionDiv = document.createElement('div');
+                suggestionDiv.className = 'suggestion-item';
+                
+                const suggestionText = document.createElement('div');
+                suggestionText.className = 'suggestion-text';
+                suggestionText.textContent = suggestion;
+                
+                const suggestionActions = document.createElement('div');
+                suggestionActions.className = 'suggestion-actions';
+                
+                const addButton = document.createElement('button');
+                addButton.className = 'suggestion-button add-button';
+                addButton.textContent = 'Add Knowledge';
+                addButton.addEventListener('click', () => {
+                    questionInput.value = suggestion;
+                    answerInput.focus();
+                    learningSuggestions.splice(index, 1);
+                    renderSuggestions();
+                });
+                
+                const ignoreButton = document.createElement('button');
+                ignoreButton.className = 'suggestion-button ignore-button';
+                ignoreButton.textContent = 'Ignore';
+                ignoreButton.addEventListener('click', () => {
+                    learningSuggestions.splice(index, 1);
+                    renderSuggestions();
+                });
+                
+                suggestionActions.appendChild(addButton);
+                suggestionActions.appendChild(ignoreButton);
+                
+                suggestionDiv.appendChild(suggestionText);
+                suggestionDiv.appendChild(suggestionActions);
+                
+                suggestionsContainer.appendChild(suggestionDiv);
+            });
+        }
+    </script>
+</body>
+</html>
