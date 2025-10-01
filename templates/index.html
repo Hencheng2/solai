@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolAI - Personal Assistant</title>
+    <style>
+        :root {
+            --dark-bg: #0a0f0d;
+            --card-bg: #1a2a24;
+            --accent-green: #2d5a4a;
+            --accent-orange: #d35400;
+            --light-green: #3a7a5f;
+            --text-light: #e8f5e8;
+            --text-muted: #a0b8a0;
+            --border-color: #2d4a3d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-light);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 3rem;
+            font-weight: 300;
+            color: var(--text-light);
+            cursor: default;
+            user-select: none;
+        }
+
+        .secret-s {
+            color: var(--text-light) !important;
+            transition: all 0.3s ease;
+        }
+
+        .secret-s:hover {
+            color: var(--accent-orange) !important;
+            cursor: pointer;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: var(--accent-green);
+            color: var(--text-light);
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background: var(--light-green);
+            color: var(--text-light);
+            border-bottom-left-radius: 5px;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 25px;
+            background: var(--dark-bg);
+            color: var(--text-light);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .message-input:focus {
+            border-color: var(--accent-orange);
+        }
+
+        .send-button {
+            padding: 15px 25px;
+            background: var(--accent-orange);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .send-button:hover {
+            background: #e67e22;
+            transform: translateY(-2px);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        /* Admin Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: var(--accent-orange);
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-button:hover {
+            color: var(--accent-orange);
+        }
+
+        .password-section {
+            margin-bottom: 20px;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--dark-bg);
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+
+        .admin-section {
+            display: none;
+        }
+
+        .section-title {
+            color: var(--accent-orange);
+            margin: 20px 0 10px 0;
+            font-size: 1.2rem;
+        }
+
+        .add-knowledge-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-input, .form-textarea {
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--dark-bg);
+            color: var(--text-light);
+            font-family: inherit;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-button {
+            padding: 12px 20px;
+            background: var(--accent-orange);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .form-button:hover {
+            background: #e67e22;
+        }
+
+        .knowledge-list, .suggestions-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .knowledge-item, .suggestion-item {
+            background: var(--dark-bg);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-green);
+        }
+
+        .suggestion-item {
+            border-left-color: var(--accent-orange);
+        }
+
+        .delete-button {
+            background: #c0392b;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
+        .delete-button:hover {
+            background: #e74c3c;
+        }
+
+        .clear-suggestions {
+            background: var(--accent-orange);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+                height: 100vh;
+            }
+
+            .title {
+                font-size: 2.5rem;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+
+            .input-area {
+                padding: 15px;
+            }
+
+            .message-input, .send-button {
+                padding: 12px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title {
+                font-size: 2rem;
+            }
+
+            .message {
+                max-width: 90%;
+                padding: 12px 15px;
+            }
+
+            .chat-messages {
+                padding: 15px;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-green);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--light-green);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">
+                <span class="secret-s" id="secretS">S</span>olAI
+            </h1>
+            <p class="subtitle">Your personal AI assistant - Always learning, always helping</p>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    Hello! I'm SolAI, your personal assistant. I'm here to help you with information and tasks. What would you like to know?
+                </div>
+            </div>
+            <div class="input-area">
+                <input type="text" class="message-input" id="messageInput" placeholder="Type your message here..." maxlength="500">
+                <button class="send-button" id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">SolAI Knowledge Management</h2>
+                <button class="close-button" id="closeModal">&times;</button>
+            </div>
+            
+            <div class="password-section" id="passwordSection">
+                <input type="password" class="password-input" id="passwordInput" placeholder="Enter admin password">
+                <button class="form-button" id="verifyPassword">Access Knowledge Base</button>
+            </div>
+            
+            <div class="admin-section" id="adminSection">
+                <div class="add-knowledge">
+                    <h3 class="section-title">Add New Knowledge</h3>
+                    <form class="add-knowledge-form" id="addKnowledgeForm">
+                        <textarea class="form-textarea" id="knowledgeContent" placeholder="Enter knowledge content (plain text)..." required></textarea>
+                        <input type="text" class="form-input" id="knowledgeCategory" placeholder="Category (optional)" value="general">
+                        <button type="submit" class="form-button">Add to Knowledge Base</button>
+                    </form>
+                </div>
+                
+                <div class="existing-knowledge">
+                    <h3 class="section-title">Existing Knowledge</h3>
+                    <div class="knowledge-list" id="knowledgeList">
+                        <!-- Knowledge items will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="suggestions">
+                    <h3 class="section-title">Learning Suggestions</h3>
+                    <div class="suggestions-list" id="suggestionsList">
+                        <!-- Suggestions will be populated here -->
+                    </div>
+                    <button class="clear-suggestions" id="clearSuggestions">Clear All Suggestions</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SolAIChat {
+            constructor() {
+                this.chatMessages = document.getElementById('chatMessages');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.secretS = document.getElementById('secretS');
+                this.adminModal = document.getElementById('adminModal');
+                this.closeModal = document.getElementById('closeModal');
+                this.passwordSection = document.getElementById('passwordSection');
+                this.adminSection = document.getElementById('adminSection');
+                this.passwordInput = document.getElementById('passwordInput');
+                this.verifyPassword = document.getElementById('verifyPassword');
+                this.addKnowledgeForm = document.getElementById('addKnowledgeForm');
+                this.knowledgeList = document.getElementById('knowledgeList');
+                this.suggestionsList = document.getElementById('suggestionsList');
+                this.clearSuggestions = document.getElementById('clearSuggestions');
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.messageInput.focus();
+            }
+            
+            setupEventListeners() {
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendMessage();
+                    }
+                });
+                
+                this.secretS.addEventListener('click', () => this.openAdminModal());
+                this.closeModal.addEventListener('click', () => this.closeAdminModal());
+                this.verifyPassword.addEventListener('click', () => this.verifyAdminPassword());
+                this.addKnowledgeForm.addEventListener('submit', (e) => this.addKnowledge(e));
+                this.clearSuggestions.addEventListener('click', () => this.clearAllSuggestions());
+                
+                // Close modal when clicking outside
+                this.adminModal.addEventListener('click', (e) => {
+                    if (e.target === this.adminModal) {
+                        this.closeAdminModal();
+                    }
+                });
+            }
+            
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message) return;
+                
+                this.addMessage(message, 'user');
+                this.messageInput.value = '';
+                
+                try {
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message })
+                    });
+                    
+                    const data = await response.json();
+                    this.addMessage(data.response, 'bot');
+                } catch (error) {
+                    this.addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+                }
+            }
+            
+            addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}-message`;
+                messageDiv.textContent = text;
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+            
+            openAdminModal() {
+                this.adminModal.style.display = 'block';
+                this.passwordSection.style.display = 'block';
+                this.adminSection.style.display = 'none';
+                this.passwordInput.value = '';
+            }
+            
+            closeAdminModal() {
+                this.adminModal.style.display = 'none';
+            }
+            
+            async verifyAdminPassword() {
+                const password = this.passwordInput.value.trim();
+                
+                try {
+                    const response = await fetch('/admin/verify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.passwordSection.style.display = 'none';
+                        this.adminSection.style.display = 'block';
+                        this.loadKnowledgeData();
+                    } else {
+                        alert('Invalid password!');
+                    }
+                } catch (error) {
+                    alert('Error verifying password');
+                }
+            }
+            
+            async loadKnowledgeData() {
+                try {
+                    const response = await fetch('/admin/knowledge');
+                    const data = await response.json();
+                    
+                    this.renderKnowledgeList(data.entries);
+                    this.renderSuggestionsList(data.suggestions);
+                } catch (error) {
+                    console.error('Error loading knowledge data:', error);
+                }
+            }
+            
+            renderKnowledgeList(entries) {
+                this.knowledgeList.innerHTML = '';
+                
+                entries.sort((a, b) => b.id - a.id).forEach(entry => {
+                    const item = document.createElement('div');
+                    item.className = 'knowledge-item';
+                    item.innerHTML = `
+                        <strong>ID: ${entry.id}</strong> | Category: ${entry.category}<br>
+                        ${entry.content}<br>
+                        <small>Added: ${entry.timestamp}</small>
+                        <button class="delete-button" onclick="solAI.deleteKnowledge(${entry.id})">Delete</button>
+                    `;
+                    this.knowledgeList.appendChild(item);
+                });
+            }
+            
+            renderSuggestionsList(suggestions) {
+                this.suggestionsList.innerHTML = '';
+                
+                suggestions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(suggestion => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.innerHTML = `
+                        ${suggestion.query}<br>
+                        <small>Suggested: ${suggestion.timestamp}</small>
+                    `;
+                    this.suggestionsList.appendChild(item);
+                });
+            }
+            
+            async addKnowledge(e) {
+                e.preventDefault();
+                
+                const content = document.getElementById('knowledgeContent').value.trim();
+                const category = document.getElementById('knowledgeCategory').value.trim() || 'general';
+                
+                if (!content) {
+                    alert('Please enter knowledge content');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/admin/knowledge', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ content, category })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        document.getElementById('knowledgeContent').value = '';
+                        this.loadKnowledgeData();
+                    } else {
+                        alert('Error adding knowledge: ' + data.error);
+                    }
+                } catch (error) {
+                    alert('Error adding knowledge');
+                }
+            }
+            
+            async deleteKnowledge(id) {
+                if (!confirm('Are you sure you want to delete this knowledge entry?')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/admin/knowledge', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ id })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.loadKnowledgeData();
+                    } else {
+                        alert('Error deleting knowledge');
+                    }
+                } catch (error) {
+                    alert('Error deleting knowledge');
+                }
+            }
+            
+            async clearAllSuggestions() {
+                if (!confirm('Are you sure you want to clear all suggestions?')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/admin/suggestions', {
+                        method: 'DELETE'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.loadKnowledgeData();
+                    } else {
+                        alert('Error clearing suggestions');
+                    }
+                } catch (error) {
+                    alert('Error clearing suggestions');
+                }
+            }
+        }
+        
+        // Initialize the chat when the page loads
+        const solAI = new SolAIChat();
+    </script>
+</body>
+</html>
